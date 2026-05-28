@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+.forecast-container {
+  margin-top: 25px;
+}
+
+.forecast-mini-card:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.35) !important;
+}
