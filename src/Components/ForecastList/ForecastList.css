@@ -1,0 +1,9 @@
+.forecast-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 30px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 750px;
+}

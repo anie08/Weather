@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import SearchBox from "../Components/SearchBox/SearchBox";
+import UnitSelector from "../Components/UnitSelector/UnitSelector";
+import CurrentWeather from "../Components/CurrentWeather/CurrentWeather";
+import ForecastList from "../Components/ForecastList/ForecastList";
+
 import "./WeatherPage.css";
 
 function WeatherPage() {
   const { unit } = useParams();
   const navigate = useNavigate();
-
   const API_KEY = "a3b178a86aac45adaca203807260904";
 
   const [inputValue, setInputValue] = useState("");
@@ -26,17 +30,11 @@ function WeatherPage() {
       Default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1774&auto=format&fit=crop",
     };
 
-    if (text.includes("clear") || text.includes("sunny")) {
-      setBgImage(images.Clear);
-    } else if (text.includes("cloud") || text.includes("overcast") || text.includes("mist")) {
-      setBgImage(images.Clouds);
-    } else if (text.includes("rain") || text.includes("drizzle")) {
-      setBgImage(images.Rain);
-    } else if (text.includes("snow") || text.includes("blizzard")) {
-      setBgImage(images.Snow);
-    } else {
-      setBgImage(images.Default);
-    }
+    if (text.includes("clear") || text.includes("sunny")) setBgImage(images.Clear);
+    else if (text.includes("cloud") || text.includes("overcast") || text.includes("mist")) setBgImage(images.Clouds);
+    else if (text.includes("rain") || text.includes("drizzle")) setBgImage(images.Rain);
+    else if (text.includes("snow") || text.includes("blizzard")) setBgImage(images.Snow);
+    else setBgImage(images.Default);
   };
 
   const fetchWeather = async (city) => {
@@ -69,7 +67,6 @@ function WeatherPage() {
       localStorage.setItem("city", query);
     } catch (err) {
       setError("Server connection error");
-      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -99,74 +96,47 @@ function WeatherPage() {
   };
 
   const formatTemp = (tempC) => {
-    if (unit === "f") {
-      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
-    }
+    if (unit === "f") return `${Math.round((tempC * 9) / 5 + 32)}°F`;
     return `${Math.round(tempC)}°C`;
   };
 
   const getDayName = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { weekday: "short" });
+    return date.toLocaleDateString("en-US", { weekday: "long" });
   };
 
   return (
     <div className="weather-container" style={{ backgroundImage: `url(${bgImage})` }}>
-      <form className="search-box" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Enter city name..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-        />
-        <button type="submit">Search</button>
-      </form>
+      <SearchBox 
+        inputValue={inputValue} 
+        setInputValue={setInputValue} 
+        onSearch={handleSearch} 
+      />
 
-      <div className="unit-buttons">
-        <button className={`unit-btn ${unit === "c" ? "active" : ""}`} onClick={() => navigate("/weather/c")}>°C</button>
-        <button className={`unit-btn ${unit === "f" ? "active" : ""}`} onClick={() => navigate("/weather/f")}>°F</button>
-      </div>
+      <UnitSelector 
+        unit={unit} 
+        onUnitChange={(targetUnit) => navigate(`/weather/${targetUnit}`)} 
+      />
 
       {loading && <h2 className="loading-text">Loading...</h2>}
       {error && <h2 className="error-text">{error}</h2>}
 
       {selectedDay && !loading && !error && (
-        <div className="weather-card">
-          <h2 style={{ color: "gold" }}>{cityName}</h2>
-          <p style={{ fontSize: "14px", opacity: 0.8 }}>{selectedDay.date}</p>
-
-          <img src={`https:${selectedDay.condition.icon}`} alt="weather icon" />
-
-          <h1>{formatTemp(selectedDay.temp_c)}</h1>
-          <p>🌥 {selectedDay.condition.text}</p>
-          <p>💧 Humidity: {selectedDay.humidity}%</p>
-        </div>
+        <CurrentWeather 
+          cityName={cityName} 
+          selectedDay={selectedDay} 
+          formatTemp={formatTemp} 
+        />
       )}
 
       {forecastDays.length > 0 && !loading && !error && (
-        <div className="forecast-container" style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px", flexWrap: "wrap" }}>
-          {forecastDays.map((day, index) => (
-            <div
-              key={index}
-              className="forecast-mini-card"
-              onClick={() => handleDaySelect(day)}
-              style={{
-                background: "rgba(255, 255, 255, 0.2)",
-                backdropFilter: "blur(5px)",
-                padding: "10px",
-                borderRadius: "10px",
-                textAlign: "center",
-                cursor: "pointer",
-                width: "80px",
-                transition: "transform 0.2s"
-              }}
-            >
-              <p style={{ fontWeight: "bold", margin: "0" }}>{index === 0 ? "Today" : getDayName(day.date)}</p>
-              <img src={`https:${day.day.condition.icon}`} alt="mini icon" style={{ width: "40px" }} />
-              <p style={{ margin: "0", fontSize: "14px" }}>{formatTemp(day.day.avgtemp_c)}</p>
-            </div>
-          ))}
-        </div>
+        <ForecastList 
+          forecastDays={forecastDays}
+          selectedDay={selectedDay}
+          onDaySelect={handleDaySelect}
+          getDayName={getDayName}
+          formatTemp={formatTemp}
+        />
       )}
     </div>
   );
