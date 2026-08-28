@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import SearchBox from "../Components/SearchBox/SearchBox";
 import UnitSelector from "../Components/UnitSelector/UnitSelector";
@@ -37,7 +37,7 @@ function WeatherPage() {
     else setBgImage(images.Default);
   };
 
-  const fetchWeather = async (city) => {
+  const fetchWeather = useCallback(async (city) => {
     const query = city || "Yerevan";
     setLoading(true);
     setError("");
@@ -70,12 +70,12 @@ function WeatherPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_KEY]);
 
   useEffect(() => {
     const savedCity = localStorage.getItem("city") || "Yerevan";
     fetchWeather(savedCity);
-  }, []);
+  }, [fetchWeather]);
 
   const handleSearch = (e) => {
     e.preventDefault();
